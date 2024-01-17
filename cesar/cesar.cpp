@@ -71,6 +71,7 @@ string obtenerTextoArchivo(string ruta){
         texto += c;
     }
     arch.close();
+    for(char& c:texto) c=toupper(c);
     return texto;
 }
 
@@ -133,15 +134,14 @@ int main(){
     textoDescifrado = descifrar(textoCifrado, k);
     guardarTextoArchivo(pathTextoDescifrado, textoDescifrado);
 
-    cout << "Base k: " << k << endl;
-    cout << "Texto original: " << stringArchivo(pathTexto) << endl;
-    cout << "Texto cifrado: " << stringArchivo(pathTextoCifrado) << endl;
-    cout << "Texto descifrado: " << stringArchivo(pathTextoDescifrado) << endl;
-
     fuerzaBruta(convertStringVector(stringArchivo(pathDiccionario)), stringArchivo(pathTextoCifrado), textoDescifradoFB, Kp);
 
-    cout << "Texto descrifado por fuerza bruta: " << textoDescifradoFB << endl;
-    cout << "Valor k encontrado por fuerza bruta: " <<  Kp << endl;
+    cout << "Base k:\t\t\t" << k << endl;
+    cout << "Texto original:\t\t" << stringArchivo(pathTexto) << endl;
+    cout << "Texto cifrado:\t\t" << stringArchivo(pathTextoCifrado) << endl;
+    cout << "Texto descifrado:\t" << stringArchivo(pathTextoDescifrado) << endl;
+    cout << "Texto descrifado (FB):\t" << textoDescifradoFB << endl;
+    cout << "k encontrado (FB):\t" <<  Kp << endl;
     return 0;
 }
 
