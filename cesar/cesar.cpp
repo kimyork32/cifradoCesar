@@ -81,7 +81,6 @@ void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifr
     string textoCifrado = textC;
     vector<string> palabrasCifradas;
     int coincidencias = 0;
-    string palDic;
     for(int k = 0; k < 26; k++){
         textoCifrado = descifrar(textC, k);
         palabrasCifradas = convertStringVector(textoCifrado);
@@ -96,15 +95,10 @@ void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifr
                 palDic="";
             }
         }
-        pesos.push_back((coincidencias * 100.0) / textoCifrado.size());
-        coincidencias = 0;    
-    }
-    int temp = pesos[0];
-    Kp=0;
-    for(int i=0; i<pesos.size(); i++){
-        if(pesos[i]>temp){
-            temp = pesos[i];
-            Kp = i;
+        if(coincidencias>0){
+            textoDescrifradoFB = textoCifrado;
+            Kp = k;
+            return;
         }
     }
     textoDescrifradoFB = descifrar(textC, Kp);
@@ -157,4 +151,3 @@ int main(){
     
     return 0;
 }
-
