@@ -81,6 +81,7 @@ void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifr
     string textoCifrado = textC;
     vector<string> palabrasCifradas;
     int coincidencias = 0;
+    string palDic;
     for(int k = 0; k < 26; k++){
         textoCifrado = descifrar(textC, k);
         palabrasCifradas = convertStringVector(textoCifrado);
