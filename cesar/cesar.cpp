@@ -2,79 +2,33 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <algorithm>
 #include <fstream>
 #include <sstream>
 using namespace std;
-string cifrar(string texto, int k);
-string descifrar(string textoCifrado, int k);
-string stringArchivo(string ruta);
-void guardarTextoArchivo(string ruta, string texto);
-string obtenerTextoArchivo(string ruta);
-void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifradoFB, int &p);
-vector<string> convertStringVector(string texto);
 
-string cifrar(string texto, int k){
-    string textoCifrado;
-    vector<char> vec(texto.begin(), texto.end());
-    for(char l : vec){
-        if(l == 32) // evitar cifrar el espacio
-            textoCifrado += ' ';
-        else{
-            textoCifrado += static_cast<char>((l - 'A' + k) % 26 + 'A');
-        }
-    }
-    return textoCifrado;
-}
-
-string descifrar(string textoCifrado, int k){
-
-    string textoDescifrado;
-    vector<char> vec(textoCifrado.begin(), textoCifrado.end());
-
-    for(char l : vec){
-        if(l == 32) // evitar cifrar el espacio
-            textoDescifrado += ' ';
-        else{
-            textoDescifrado += static_cast<char>((l - 'A' - k) % 26 + 'A');
-        }
-    }
-    return textoDescifrado;
-}
-
+// OBTENER CONTENIDO DE ARCHIVO TXT A STRING
 string stringArchivo(string ruta){
     string texto;
-    ifstream arch(ruta);
     char caracter;
+    ifstream arch(ruta);
+    if(!arch.is_open()) return "";
     while(arch.get(caracter)){
-        if(caracter == '\n'){
-            texto += " ";    
-        }else{
-            texto += caracter;
-        }
+        if(caracter == '\n') texto += " ";    
+        else texto += caracter;
     }
+    for(char& c:texto) c=toupper(c);
+    arch.close();
     return texto;
 }
 
+// GUARDAR TEXTO A UN ARCHIVO TXT
 void guardarTextoArchivo(string ruta, string texto){
     ofstream arch(ruta);
     arch << texto;
     arch.close();
 }
 
-string obtenerTextoArchivo(string ruta){
-    ifstream arch(ruta);
-    if (!arch.is_open()) return "";
-    string texto;
-    char c;
-    while(arch.get(c)){
-        texto += c;
-    }
-    arch.close();
-    for(char& c:texto) c=toupper(c);
-    return texto;
-}
-
+// CONVERTIR UN STRING A VECTOR
 vector<string> convertStringVector(string texto){
     stringstream ss(texto);
     string p;
@@ -85,17 +39,54 @@ vector<string> convertStringVector(string texto){
     return vectP;
 }
 
-void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifradoFB, int &Kp){
+// CESAR CIFRAR
+string cifrar(string texto, int k){
+    string textoCifrado;
+    char Ek;
+    for(int i=0; i<texto.size(); i++){
+        if(texto[i] == ' '){
+            textoCifrado += ' ';
+        }else{
+            int x = static_cast<int>(texto[i]-'A');
+            Ek = static_cast<char>((x+k)%26+'A');
+            textoCifrado += Ek;   
+        }
+    }
+    return textoCifrado;
+}
+
+// CESAR DESCIFRAR
+string descifrar(string textoCifrado, int k){
+    string textoDescifrado = "";
+    char Ek;
+    for(int i=0; i<textoCifrado.size(); i++){
+        if(textoCifrado[i] == ' '){
+            textoDescifrado += ' ';
+        }else{
+            int x = static_cast<int>(textoCifrado[i]-'A');
+            if(x-k<0){
+                Ek = static_cast<char>((x+26-k)%26+'A');
+            }
+            else{
+                Ek = static_cast<char>((x-k)%26+'A');
+            }
+            textoDescifrado += Ek;   
+        }
+    }
+    return textoDescifrado;
+}
+
+// FUERZA BRUTA PARA OBTENER K, PORCENTAJES Y TEXTO DESCRIFRADO CON FB
+void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifradoFB, int &Kp, vector<float>& pesos){
     string textoCifrado = textC;
     vector<string> palabrasCifradas;
     int coincidencias = 0;
+    string palDic;
     for(int k = 0; k < 26; k++){
         textoCifrado = descifrar(textC, k);
         palabrasCifradas = convertStringVector(textoCifrado);
         for(int i=0; i< palabrasCifradas.size(); i++){
             for(int j = 0; j < diccionario.size(); j++){
-
-                string palDic;
                 for(char &c : diccionario[j]){
                     palDic += toupper(c);
                 }
@@ -105,13 +96,28 @@ void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifr
                 palDic="";
             }
         }
-        if(coincidencias>0){
-            textoDescrifradoFB = textoCifrado;
-            Kp = k;
-            return;
+        pesos.push_back((coincidencias * 100.0) / textoCifrado.size());
+        coincidencias = 0;    
+    }
+    int temp = pesos[0];
+    Kp=0;
+    for(int i=0; i<pesos.size(); i++){
+        if(pesos[i]>temp){
+            temp = pesos[i];
+            Kp = i;
         }
     }
+    textoDescrifradoFB = descifrar(textC, Kp);
     return;
+}
+
+// IMPRIMIR UN VECTOR
+template<typename T>
+void print(vector<T> vect){
+    for(T i : vect){
+        cout << i << " ";
+    }
+    cout << endl;
 }
 
 int main(){
@@ -121,12 +127,16 @@ int main(){
     string pathDiccionario = "diccionario.txt";
     string pathDiccionario2 = "diccionario2.txt";
 
-    string texto = obtenerTextoArchivo(pathTexto);
+    string texto = stringArchivo(pathTexto);
     string textoCifrado;
     string textoDescifrado;
     string textoDescifradoFB = "";
+
+    vector<float> pesos;
     
-    int Kp, k = 2;
+    int Kp, k;
+    cout << "k:"; cin >> k;
+    cout << endl;
 
     textoCifrado = cifrar(texto, k);
     guardarTextoArchivo(pathTextoCifrado, textoCifrado);
@@ -134,14 +144,17 @@ int main(){
     textoDescifrado = descifrar(textoCifrado, k);
     guardarTextoArchivo(pathTextoDescifrado, textoDescifrado);
 
-    fuerzaBruta(convertStringVector(stringArchivo(pathDiccionario)), stringArchivo(pathTextoCifrado), textoDescifradoFB, Kp);
+    fuerzaBruta(convertStringVector(stringArchivo(pathDiccionario)), stringArchivo(pathTextoCifrado), textoDescifradoFB, Kp, pesos);
 
-    cout << "Base k:\t\t\t" << k << endl;
-    cout << "Texto original:\t\t" << stringArchivo(pathTexto) << endl;
-    cout << "Texto cifrado:\t\t" << stringArchivo(pathTextoCifrado) << endl;
-    cout << "Texto descifrado:\t" << stringArchivo(pathTextoDescifrado) << endl;
-    cout << "Texto descrifado (FB):\t" << textoDescifradoFB << endl;
-    cout << "k encontrado (FB):\t" <<  Kp << endl;
+    cout << "Base k:" << k << endl << endl;
+    cout << "Texto original\n" << stringArchivo(pathTexto) << endl << endl;
+    cout << "Texto cifrado:\n" << stringArchivo(pathTextoCifrado) << endl << endl;
+    cout << "Texto descifrado:\n" << stringArchivo(pathTextoDescifrado) << endl << endl;
+    cout << "Texto descrifado (FB):\n" << textoDescifradoFB << endl << endl;
+    cout << "k encontrado (FB):" <<  Kp << endl << endl;
+    cout << "Porcentajes:\n";
+    print(pesos);
+    
     return 0;
 }
 
