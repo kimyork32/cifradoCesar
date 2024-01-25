@@ -82,6 +82,7 @@ void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifr
     vector<string> palabrasCifradas;
     int coincidencias = 0;
     string palDic;
+    // cout << textoCifrado.size() << endl;
     for(int k = 0; k < 26; k++){
         textoCifrado = descifrar(textC, k);
         palabrasCifradas = convertStringVector(textoCifrado);
@@ -96,10 +97,16 @@ void fuerzaBruta(vector<string> diccionario, string textC, string& textoDescrifr
                 palDic="";
             }
         }
-        if(coincidencias>0){
-            textoDescrifradoFB = textoCifrado;
-            Kp = k;
-            return;
+        // cout << coincidencias << " ";
+        pesos.push_back((coincidencias * 100.0) / textoCifrado.size());
+        coincidencias = 0;    
+    }
+    int temp = pesos[0];
+    Kp=0;
+    for(int i=0; i<pesos.size(); i++){
+        if(pesos[i]>temp){
+            temp = pesos[i];
+            Kp = i;
         }
     }
     textoDescrifradoFB = descifrar(textC, Kp);
@@ -140,7 +147,6 @@ int main(){
     guardarTextoArchivo(pathTextoDescifrado, textoDescifrado);
 
     fuerzaBruta(convertStringVector(stringArchivo(pathDiccionario)), stringArchivo(pathTextoCifrado), textoDescifradoFB, Kp, pesos);
-
     cout << "Base k:" << k << endl << endl;
     cout << "Texto original\n" << stringArchivo(pathTexto) << endl << endl;
     cout << "Texto cifrado:\n" << stringArchivo(pathTextoCifrado) << endl << endl;
